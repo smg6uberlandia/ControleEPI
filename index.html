@@ -301,7 +301,7 @@ const MESES=["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","
 const MESES_FULL=["Janeiro","Fevereiro","Mar\u00e7o","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
 const ALERTA_DIAS=15;
 /* \u2500\u2500 Google Sheets / Apps Script \u2500\u2500 */
-const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzdTNY77cMvdioZRHIHM1p79fr4DeRIE5pROf1xUZIqb4Z66sveOQ6GyI8nJfkMUk7u/exec"; // linha 192 \u2014 cole a URL do Apps Script da conta @gmail.com
+const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzJT0rKC9AtHeBCEDT2aQ_nTfLLJVO8shmOXey7pW-q-HQRSS-3_8dbyAvgyYGXVsGc/exec"; // linha 192 \u2014 cole a URL do Apps Script da conta @gmail.com
 const DRIVE_FOLDER_EPI = "https://drive.google.com/drive/folders/14x0K-loMc7V1MJS1bIkTiwMNECxwaSwx"; // opcional: ID da pasta de comprovantes na nova conta
 let   DRIVE_STATUS = "idle";
 
@@ -1541,6 +1541,19 @@ function abrirRelatorioColaboradores(){
 
 
 /* ================= DESLIGADOS ================= */
+/* Codigo de validacao e botao de comprovante (usado no historico de Desligados) */
+function _codMov(r){
+  var c=r.codigo||"";
+  if(!c&&r.obs){var mm=/\[COD:\s*([A-Z0-9\-]+)\]/i.exec(r.obs);if(mm)c=mm[1];}
+  return c;
+}
+function _btnReciboDesl(r){
+  var id=r.reciboRef||r.id;
+  var mv=MOVS.find(function(x){return x.id===id;})||r;
+  if(mv.temRecibo||mv.reciboUrl||r.temRecibo||r.reciboRef)
+    return '<button class="icon-btn" title="Ver Comprovante de Entrega" onclick="reemitirRecibo(\''+id+'\')">&#128196;</button>';
+  return '<button class="icon-btn" title="Gerar comprovante" onclick="reemitirRecibo(\''+id+'\')">&#128196;</button>';
+}
 function viewDesligados(){
   var _deslExcl=deslExclGet();
   const todos=[...new Set([...COLAB_PLANILHA_DESLIGADOS,...DESLIGADOS])]
@@ -1558,7 +1571,7 @@ function viewDesligados(){
       const p=PRODUTOS.find(x=>x.id===r.produtoId);
       return `<tr><td class="num">${fmtD(r.data)}</td><td><b>${esc(p?p.descricao:"?")}</b></td>
         <td>${r.tamanho?`<span class="chip tam">${esc(r.tamanho)}</span>`:r.cor?corDot(r.cor)+esc(r.cor):"\u2014"}</td>
-        <td class="num">${r.qtd}</td><td>${esc(r.liberadoPor||"")}</td></tr>`;
+        <td class="num">${r.qtd}</td><td>${esc(r.liberadoPor||"")}</td><td style="font-family:var(--mono)">${esc(_codMov(r)||"\u2014")}</td><td class="num">${_btnReciboDesl(r)}</td></tr>`;
     }).join("");
     return `<div class="panel">
       <div class="panel-bar">
@@ -1571,8 +1584,8 @@ function viewDesligados(){
         <div style="margin-top:10px">${chips||`<span style="color:var(--txt-faint)">Sem registros</span>`}</div>
       </div>
       <div class="scroll-y" style="max-height:420px"><table>
-        <thead><tr><th>Data</th><th>Produto</th><th>Tam./Cor</th><th class="num">Qtd</th><th>Liberado por</th></tr></thead>
-        <tbody>${rows||`<tr><td colspan="5"><div class="empty">Nenhuma entrega registrada.</div></td></tr>`}</tbody>
+        <thead><tr><th>Data</th><th>Produto</th><th>Tam./Cor</th><th class="num">Qtd</th><th>Liberado por</th><th>C\u00f3digo</th><th class="num">Comprovante</th></tr></thead>
+        <tbody>${rows||`<tr><td colspan="7"><div class="empty">Nenhuma entrega registrada.</div></td></tr>`}</tbody>
       </table></div>
     </div>`;
   }
